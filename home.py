@@ -1,82 +1,24 @@
 import streamlit as st
-import cv2
-import tensorflow as tf
-import numpy as np
 
-# Load model TensorFlow Lite
-try:
-    interpreter = tf.lite.Interpreter(model_path='rempah_detection.tflite')
-    interpreter.allocate_tensors()
+st.set_page_config(
+    page_title="Deteksi Rempah",
+    page_icon=":herb:", 
+)
 
-    # Get input and output details
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-except Exception as e:
-    st.error(f"Error saat memuat model: {e}")
-    st.stop()
+col1, col2 = st.columns(2)
 
-# Daftar kategori rempah
-categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah', 'bawang putih', 'biji ketumbar',
-              'bukan rempah', 'bunga lawang', 'cengkeh', 'daun jeruk', 'daun kemangi', 'daun ketumbar', 'daun salam',
-              'jahe', 'jinten', 'kapulaga', 'kayu manis', 'kayu secang', 'kemiri', 'kemukus', 'kencur', 'kluwek',
-              'kunyit', 'lada', 'lengkuas', 'pala', 'saffron', 'serai', 'vanili', 'wijen']
+with col1:
+    st.title("Kenali Rempah dengan Mudah")
+    st.markdown(" ")
+    st.markdown(
+        "Aplikasi ini dapat mendeteksi jenis rempah yang ditangkap oleh kamera secara real-time. "
+        "Cukup arahkan kamera ke rempah yang ingin diidentifikasi, dan aplikasi akan menampilkan hasilnya."
+    )
+    st.link_button("Coba Sekarang :sparkles:", "/Deteksi_Rempah_✨") 
 
-# Judul aplikasi Streamlit
-st.title('Deteksi Rempah Realtime')
+with col2:
+    st.image("assets/illustrations/rempah-rempah.jpg")  # Ganti dengan gambar yang relevan
 
-# Informasi Tambahan
-st.write("Aplikasi ini akan mendeteksi jenis rempah yang ditangkap oleh kamera secara realtime.")
-
-# Class untuk memproses frame video dengan WebRTC
-class VideoTransformer(VideoTransformerBase):
-    def transform(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-
-        # Melakukan deteksi rempah
-        img = deteksi_rempah(img)
-
-        return img
-
-# Fungsi untuk melakukan deteksi objek (sama seperti sebelumnya)
-@st.cache_data  # Gunakan caching jika memungkinkan
-def deteksi_rempah(frame):
-    """
-    Melakukan deteksi rempah pada frame gambar.
-
-    Args:
-        frame: Frame gambar dari kamera.
-
-    Returns:
-        Frame gambar dengan label rempah yang terdeteksi.
-    """
-    try:
-        # Preprocess frame
-        img = cv2.resize(frame, (110, 110))  # Resize ke 110x110
-        img = img / 255.0  # Normalisasi
-        img = img.astype('float32')
-        img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
-
-        # Set input tensor
-        interpreter.set_tensor(input_details[0]['index'], img)
-
-        # Run inference
-        interpreter.invoke()
-
-        # Get output tensor
-        predictions = interpreter.get_tensor(output_details[0]['index'])
-
-        # Mendapatkan label dengan probabilitas tertinggi
-        predicted_class = np.argmax(predictions)
-        label = categories[predicted_class]
-        confidence = predictions[0][predicted_class]
-
-        # Menampilkan label pada frame
-        cv2.putText(frame, f'{label} {confidence:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-
-        return frame
-    except Exception as e:
-        st.error(f"Error saat melakukan deteksi: {e}")
-        return frame  # Kembalikan frame asli jika terjadi error
-
-# Menjalankan kamera dan melakukan deteksi
-webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
+st.markdown("")
+st.markdown("")
+st.image("assets/illustrations/banner_rempah.jpg")   # Ganti dengan gambar banner yang relevan

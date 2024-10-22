@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow import keras
 
 # Load model Keras
-model = keras.models.load_model('rempah_detection.keras')
+model = keras.models.load_model('rempah_detection_final.keras')
 
 # Daftar kategori rempah
 categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah', 'bawang putih', 'biji ketumbar',
@@ -31,8 +31,7 @@ def deteksi_rempah(image):
     """
     # Preprocess image
     img = image.resize((110, 110))  # Resize ke 110x110
-    img = np.array(img) / 255.0  # Normalisasi
-    img = img.astype('float32')
+    img = img.img_to_array(img) # Normalisasi
     img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
 
     # Prediksi

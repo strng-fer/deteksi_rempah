@@ -2,3 +2,4 @@ tensorflow
 opencv-python-headless
 keras
 streamlit-webrtc
+matplotlib.pyplot

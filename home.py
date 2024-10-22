@@ -15,7 +15,7 @@ with col1:
         "Cukup arahkan kamera ke rempah yang ingin diidentifikasi, dan aplikasi akan menampilkan hasilnya."
     )
     if st.button("Cari di sini"):
-        st.switch_page("pages/1_Find.py")
+        st.switch_page("pages/Deteksi_Rempah.py")
 
 with col2:
     st.image("assets/illustrations/rempah-rempah.jpg")  # Ganti dengan gambar yang relevan

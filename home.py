@@ -70,12 +70,12 @@ if start_camera:
     if img_file_buffer is not None:
       # Konversi dari file buffer ke OpenCV image
       bytes_data = img_file_buffer.getvalue()
-      cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+      cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
 
-      # Melakukan deteksi rempah
-      frame = deteksi_rempah(cv2_img)
-      # Menampilkan frame di Streamlit
-      st.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
+      # Melakukan deteksi rempah
+      frame = deteksi_rempah(cv2_img)
+      # Menampilkan frame di Streamlit
+      st.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
 
 
 

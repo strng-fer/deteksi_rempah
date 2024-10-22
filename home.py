@@ -76,7 +76,3 @@ if start_camera:
       frame = deteksi_rempah(cv2_img)
       # Menampilkan frame di Streamlit
       st.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
-
-
-
-    cap.release()

@@ -5,7 +5,7 @@ from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
 
 # Load the saved model
-model = load_model('/content/rempah_detection.keras')
+model = load_model('rempah_detection.keras')
 
 # Define a function to preprocess the uploaded image
 def preprocess_image(img):

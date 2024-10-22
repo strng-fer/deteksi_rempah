@@ -20,11 +20,8 @@ categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah',
 # Judul aplikasi Streamlit
 st.title('Deteksi Rempah')
 
-# Upload gambar
-uploaded_file = st.file_uploader("Upload Gambar Rempah", type=["jpg", "jpeg", "png"])
-
-# Tombol prediksi
-predict_button = st.button("Prediksi")
+# Pilihan sumber gambar
+source = st.radio("Sumber Gambar:", ("Upload Gambar", "Ambil Gambar"))
 
 # Fungsi untuk melakukan deteksi objek
 def deteksi_rempah(image):
@@ -32,7 +29,7 @@ def deteksi_rempah(image):
     Melakukan deteksi rempah pada gambar.
 
     Args:
-        image: Gambar yang diunggah.
+        image: Gambar yang diunggah atau diambil dari kamera.
 
     Returns:
         Gambar dengan label rempah yang terdeteksi dan string label.
@@ -62,18 +59,42 @@ def deteksi_rempah(image):
 
     return image, label
 
-
 # Menampilkan hasil prediksi
-if uploaded_file is not None and predict_button:
-    # Membaca gambar yang diupload
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    image = cv2.imdecode(file_bytes, 1)
+if source == "Upload Gambar":
+    # Upload gambar
+    uploaded_file = st.file_uploader("Upload Gambar Rempah", type=["jpg", "jpeg", "png"])
 
-    # Melakukan deteksi rempah
-    image, label = deteksi_rempah(image)
+    # Tombol prediksi
+    predict_button = st.button("Prediksi")
 
-    # Menampilkan gambar di Streamlit
-    st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), channels="RGB")
+    if uploaded_file is not None and predict_button:
+        # Membaca gambar yang diupload
+        file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+        image = cv2.imdecode(file_bytes, 1)
 
-    # Menampilkan hasil prediksi
-    st.write(f"Rempah yang terdeteksi: {label}")
+        # Melakukan deteksi rempah
+        image, label = deteksi_rempah(image)
+
+        # Menampilkan gambar di Streamlit
+        st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), channels="RGB")
+
+        # Menampilkan hasil prediksi
+        st.write(f"Rempah yang terdeteksi: {label}")
+
+elif source == "Ambil Gambar":
+    # Ambil gambar dari kamera
+    camera_image = st.camera_input("Ambil Gambar Rempah")
+
+    if camera_image is not None:
+        # Membaca gambar yang diambil dari kamera
+        file_bytes = np.asarray(bytearray(camera_image.read()), dtype=np.uint8)
+        image = cv2.imdecode(file_bytes, 1)
+
+        # Melakukan deteksi rempah
+        image, label = deteksi_rempah(image)
+
+        # Menampilkan gambar di Streamlit
+        st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), channels="RGB")
+
+        # Menampilkan hasil prediksi
+        st.write(f"Rempah yang terdeteksi: {label}")

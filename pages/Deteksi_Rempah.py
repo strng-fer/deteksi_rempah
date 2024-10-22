@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import cv2
 import tensorflow as tf
 import numpy as np
@@ -20,62 +21,42 @@ categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah',
 # Judul aplikasi Streamlit
 st.title('Deteksi Rempah Realtime')
 
-# Inisialisasi kamera
-cap = cv2.VideoCapture(0)  
+# Class untuk memproses video stream
+class RempahDetection(VideoProcessorBase):
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
 
-# Fungsi untuk melakukan deteksi objek
-def deteksi_rempah(frame):
-  """
-  Melakukan deteksi rempah pada frame gambar.
+        # Preprocess frame
+        img = cv2.resize(img, (110, 110))  # Resize ke 110x110
+        img = img / 255.0  # Normalisasi
+        img = img.astype('float32')
+        img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
 
-  Args:
-    frame: Frame gambar dari kamera.
+        # Set input tensor
+        interpreter.set_tensor(input_details[0]['index'], img)
 
-  Returns:
-    Frame gambar dengan label rempah yang terdeteksi.
-  """
-  # Preprocess frame
-  img = cv2.resize(frame, (110, 110))  # Resize ke 110x110
-  img = img / 255.0  # Normalisasi
-  img = img.astype('float32')
-  img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
+        # Melakukan inferensi
+        interpreter.invoke()
 
-  # Set input tensor
-  interpreter.set_tensor(input_details[0]['index'], img)
+        # Get output tensor
+        predictions = interpreter.get_tensor(output_details[0]['index'])
 
-  # Melakukan inferensi
-  interpreter.invoke()
+        # Mendapatkan label dengan probabilitas tertinggi
+        predicted_class = np.argmax(predictions)
+        label = categories[predicted_class]
+        confidence = predictions[0][predicted_class]
 
-  # Get output tensor
-  predictions = interpreter.get_tensor(output_details[0]['index'])
+        # Menampilkan label pada frame
+        cv2.putText(img, f'{label} {confidence:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-  # Mendapatkan label dengan probabilitas tertinggi
-  predicted_class = np.argmax(predictions)
-  label = categories[predicted_class]
-  confidence = predictions[0][predicted_class]
+        return img
 
-  # Menampilkan label pada frame
-  cv2.putText(frame, f'{label} {confidence:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+# Konfigurasi WebRTC 
+RTC_CONFIGURATION = RTCConfiguration(
+    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+)
 
-  return frame
-
-# Menampilkan video secara realtime
-frame_placeholder = st.empty()  # Placeholder untuk menampilkan frame
-
-while(cap.isOpened()): # Loop selama kamera terbuka
-  # Membaca frame dari kamera
-  ret, frame = cap.read()
-
-  # Memeriksa apakah frame kosong
-  if not ret:
-    st.error("Gagal mengambil gambar dari kamera.")
-    break # Keluar dari loop jika frame kosong
-
-  # Melakukan deteksi rempah
-  frame = deteksi_rempah(frame)
-
-  # Menampilkan frame di Streamlit
-  frame_placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
-
-# Membersihkan resource setelah selesai
-cap.release()
+# Menjalankan WebRTC Streamer
+webrtc_streamer(key="rempah_detection", 
+                video_processor_factory=RempahDetection,
+                rtc_configuration=RTC_CONFIGURATION)

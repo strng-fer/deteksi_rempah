@@ -1,5 +1,5 @@
-numpy
-tensorflow
-opencv-python
-opencv
-streamlit
+numpy==1.24.3
+tensorflow==2.13.0
+opencv-python==4.8.0
+opencv-python-headless==4.8.0
+streamlit==1.26.0

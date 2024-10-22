@@ -1,3 +1,2 @@
 tensorflow
 opencv-python
-opencv-python-contrib-headless

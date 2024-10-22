@@ -1,16 +1,10 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import cv2
-import tensorflow as tf
+from tensorflow import keras
 import numpy as np
 
-# Load model TFLite
-interpreter = tf.lite.Interpreter(model_path='rempah_detection.tflite')
-interpreter.allocate_tensors()
-
-# Get input and output tensors.
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
+# Load model Keras
+model = keras.models.load_model('rempah_detection.tflite')
 
 # Daftar kategori rempah
 categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah', 'bawang putih', 'biji ketumbar',
@@ -19,44 +13,56 @@ categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah',
               'kunyit', 'lada', 'lengkuas', 'pala', 'saffron', 'serai', 'vanili', 'wijen']
 
 # Judul aplikasi Streamlit
-st.title('Deteksi Rempah Realtime')
+st.title('Deteksi Rempah')
 
-# Class untuk memproses video stream
-class RempahDetection(VideoProcessorBase):
-    def recv(self, frame):
-        img = frame.to_ndarray(format="bgr24")
+# Upload gambar
+uploaded_file = st.file_uploader("Upload Gambar Rempah", type=["jpg", "jpeg", "png"])
 
-        # Preprocess frame
-        img = cv2.resize(img, (110, 110))  # Resize ke 110x110
-        img = img / 255.0  # Normalisasi
-        img = img.astype('float32')
-        img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
+# Tombol prediksi
+predict_button = st.button("Prediksi")
 
-        # Set input tensor
-        interpreter.set_tensor(input_details[0]['index'], img)
+# Fungsi untuk melakukan deteksi objek
+def deteksi_rempah(image):
+    """
+    Melakukan deteksi rempah pada gambar.
 
-        # Melakukan inferensi
-        interpreter.invoke()
+    Args:
+        image: Gambar yang diunggah.
 
-        # Get output tensor
-        predictions = interpreter.get_tensor(output_details[0]['index'])
+    Returns:
+        Gambar dengan label rempah yang terdeteksi dan string label.
+    """
+    # Preprocess image
+    img = cv2.resize(image, (110, 110))  # Resize ke 110x110
+    img = img / 255.0  # Normalisasi
+    img = img.astype('float32')
+    img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
 
-        # Mendapatkan label dengan probabilitas tertinggi
-        predicted_class = np.argmax(predictions)
-        label = categories[predicted_class]
-        confidence = predictions[0][predicted_class]
+    # Melakukan inferensi
+    predictions = model.predict(img)
 
-        # Menampilkan label pada frame
-        cv2.putText(img, f'{label} {confidence:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+    # Mendapatkan label dengan probabilitas tertinggi
+    predicted_class = np.argmax(predictions)
+    label = categories[predicted_class]
+    confidence = predictions[0][predicted_class]
 
-        return img
+    # Menampilkan label pada gambar
+    cv2.putText(image, f'{label} {confidence:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-# Konfigurasi WebRTC 
-RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-)
+    return image, label
 
-# Menjalankan WebRTC Streamer
-webrtc_streamer(key="rempah_detection", 
-                video_processor_factory=RempahDetection,
-                rtc_configuration=RTC_CONFIGURATION)
+
+# Menampilkan hasil prediksi
+if uploaded_file is not None and predict_button:
+    # Membaca gambar yang diupload
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    image = cv2.imdecode(file_bytes, 1)
+
+    # Melakukan deteksi rempah
+    image, label = deteksi_rempah(image)
+
+    # Menampilkan gambar di Streamlit
+    st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), channels="RGB")
+
+    # Menampilkan hasil prediksi
+    st.write(f"Rempah yang terdeteksi: {label}")

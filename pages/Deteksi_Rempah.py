@@ -1,10 +1,15 @@
 import streamlit as st
 import cv2
-from tensorflow import keras
+import tensorflow as tf
 import numpy as np
 
-# Load model Keras
-model = keras.models.load_model('rempah_detection.tflite')  
+# Load model TFLite
+interpreter = tf.lite.Interpreter(model_path='rempah_detection.tflite')
+interpreter.allocate_tensors()
+
+# Get input and output tensors.
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
 # Daftar kategori rempah
 categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah', 'bawang putih', 'biji ketumbar',
@@ -16,7 +21,6 @@ categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah',
 st.title('Deteksi Rempah Realtime')
 
 # Inisialisasi kamera
-# Gunakan cv2.VideoCapture(0) untuk kamera default atau ganti dengan indeks kamera yang sesuai
 cap = cv2.VideoCapture(0)  
 
 # Fungsi untuk melakukan deteksi objek
@@ -36,8 +40,14 @@ def deteksi_rempah(frame):
   img = img.astype('float32')
   img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
 
+  # Set input tensor
+  interpreter.set_tensor(input_details[0]['index'], img)
+
   # Melakukan inferensi
-  predictions = model.predict(img)
+  interpreter.invoke()
+
+  # Get output tensor
+  predictions = interpreter.get_tensor(output_details[0]['index'])
 
   # Mendapatkan label dengan probabilitas tertinggi
   predicted_class = np.argmax(predictions)

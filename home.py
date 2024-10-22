@@ -14,7 +14,7 @@ with col1:
         "Aplikasi ini dapat mendeteksi jenis rempah yang ditangkap oleh kamera secara real-time. "
         "Cukup arahkan kamera ke rempah yang ingin diidentifikasi, dan aplikasi akan menampilkan hasilnya."
     )
-    st.link_button("Coba Sekarang :sparkles:", "/Deteksi_Rempah_✨") 
+    st.link_button("Coba Sekarang :sparkles:", "/Deteksi_Rempah") 
 
 with col2:
     st.image("assets/illustrations/rempah-rempah.jpg")  # Ganti dengan gambar yang relevan

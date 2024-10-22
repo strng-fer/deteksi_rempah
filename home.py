@@ -33,10 +33,10 @@ def deteksi_rempah(frame):
     Melakukan deteksi rempah pada frame gambar.
 
     Args:
-      frame: Frame gambar dari kamera.
+       frame: Frame gambar dari kamera.
 
     Returns:
-      Frame gambar dengan label rempah yang terdeteksi.
+       Frame gambar dengan label rempah yang terdeteksi.
     """
     # Preprocess frame
     img = cv2.resize(frame, (110, 110))  # Resize ke 110x110
@@ -65,15 +65,18 @@ def deteksi_rempah(frame):
 
 # Menampilkan video secara realtime jika tombol ditekan
 if start_camera:
-    img_file_buffer = st.camera_input("Ambil gambar rempah")
-
-    if img_file_buffer is not None:
-        # Konversi dari file buffer ke OpenCV image
-        bytes_data = img_file_buffer.getvalue()
-        cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+    cap = cv2.VideoCapture(0)  # Gunakan kamera default (0)
+    
+    while(True):
+        ret, frame = cap.read()
+        if not ret:
+            st.write("Error: Tidak dapat menangkap frame dari kamera.")
+            break
 
         # Melakukan deteksi rempah
-        frame = deteksi_rempah(cv2_img)
+        frame = deteksi_rempah(frame)
 
         # Menampilkan frame di Streamlit
         st.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
+
+    cap.release()

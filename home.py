@@ -30,8 +30,43 @@ st.write("Aplikasi ini akan mendeteksi jenis rempah yang ditangkap oleh kamera s
 # Fungsi untuk melakukan deteksi objek (sama seperti sebelumnya)
 @st.cache_data  # Gunakan caching jika memungkinkan
 def deteksi_rempah(frame):
-    # ... (kode deteksi rempah) ...
+    """
+    Melakukan deteksi rempah pada frame gambar.
 
+    Args:
+        frame: Frame gambar dari kamera.
+
+    Returns:
+        Frame gambar dengan label rempah yang terdeteksi.
+    """
+    try:
+        # Preprocess frame
+        img = cv2.resize(frame, (110, 110))  # Resize ke 110x110
+        img = img / 255.0  # Normalisasi
+        img = img.astype('float32')
+        img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
+
+        # Set input tensor
+        interpreter.set_tensor(input_details[0]['index'], img)
+
+        # Run inference
+        interpreter.invoke()
+
+        # Get output tensor
+        predictions = interpreter.get_tensor(output_details[0]['index'])
+
+        # Mendapatkan label dengan probabilitas tertinggi
+        predicted_class = np.argmax(predictions)
+        label = categories[predicted_class]
+        confidence = predictions[0][predicted_class]
+
+        # Menampilkan label pada frame
+        cv2.putText(frame, f'{label} {confidence:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+        return frame
+    except Exception as e:
+        st.error(f"Error saat melakukan deteksi: {e}")
+        return frame  # Kembalikan frame asli jika terjadi error
 
 # Menjalankan kamera dan melakukan deteksi
 cap = cv2.VideoCapture(0)  # Gunakan kamera default (0)

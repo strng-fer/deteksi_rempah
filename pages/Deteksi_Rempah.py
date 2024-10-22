@@ -4,7 +4,6 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras.preprocessing import image
 
-
 # Load model Keras
 model = keras.models.load_model('rempah_detection_final.keras')
 
@@ -31,20 +30,27 @@ def deteksi_rempah(image_path):
     Returns:
         Tuple berisi string label dan confidence score.
     """
-    # Preprocess image
-    img = image_path.resize((110, 110))  # Resize ke 110x110
-    img = image.img_to_array(img) # Normalisasi
-    img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
+    try:
+        # Preprocess image
+        img = image_path.resize((110, 110))  # Resize ke 110x110
+        img = image.img_to_array(img) 
+        img = img / 255.0  # Normalisasi
+        img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
 
-    # Prediksi
-    predictions = model.predict(img)
+        # Prediksi
+        with st.spinner('Sedang memprediksi...'):
+            predictions = model.predict(img)
 
-    # Mendapatkan label dengan probabilitas tertinggi
-    predicted_class = np.argmax(predictions)
-    label = categories[predicted_class]
-    confidence = predictions[0][predicted_class]
+        # Mendapatkan label dengan probabilitas tertinggi
+        predicted_class = np.argmax(predictions)
+        label = categories[predicted_class]
+        confidence = predictions[0][predicted_class]
 
-    return label, confidence
+        return label, confidence
+
+    except Exception as e:
+        st.error(f"Terjadi kesalahan: {e}")
+        return None, None
 
 # Menampilkan hasil prediksi
 if source == "Upload Gambar":
@@ -56,16 +62,21 @@ if source == "Upload Gambar":
 
     if uploaded_file is not None and predict_button:
         # Membaca gambar yang diupload
-        image = Image.open(uploaded_file)
+        image_path = Image.open(uploaded_file)
 
         # Melakukan deteksi rempah
-        label, confidence = deteksi_rempah(image)
+        label, confidence = deteksi_rempah(image_path)
 
-        # Menampilkan gambar di Streamlit
-        st.image(image, channels="RGB")
+        if label is not None:
+            # Menampilkan gambar di Streamlit
+            st.image(image_path, channels="RGB")
 
-        # Menampilkan hasil prediksi
-        st.write(f"Rempah yang terdeteksi: {label} ({confidence:.2f})")
+            # Menampilkan hasil prediksi
+            st.write(f"Rempah yang terdeteksi: **{label}** ({confidence:.2f})")
+
+            # Menampilkan informasi tambahan (contoh)
+            if label == 'kunyit':
+                st.info("Kunyit adalah rempah-rempah yang sering digunakan sebagai bumbu masakan dan memiliki banyak manfaat kesehatan.")
 
 elif source == "Ambil Gambar":
     # Ambil gambar dari kamera
@@ -73,14 +84,14 @@ elif source == "Ambil Gambar":
 
     if camera_image is not None:
         # Membaca gambar yang diambil dari kamera
-        image = Image.open(camera_image)
+        image_path = Image.open(camera_image)
 
         # Melakukan deteksi rempah
-        label, confidence = deteksi_rempah(image)
+        label, confidence = deteksi_rempah(image_path)
 
-        # Menampilkan gambar di Streamlit
-        st.image(image, channels="RGB")
+        if label is not None:
+            # Menampilkan gambar di Streamlit
+            st.image(image_path, channels="RGB")
 
-        # Menampilkan hasil prediksi
-        st.write(f"Rempah yang terdeteksi: {label} ({confidence:.2f})")
-      
+            # Menampilkan hasil prediksi
+            st.write(f"Rempah yang terdeteksi: **{label}** ({confidence:.2f})")

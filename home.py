@@ -4,7 +4,7 @@ import tensorflow as tf
 import numpy as np
 
 # Load model TensorFlow Lite
-interpreter = tf.lite.Interpreter(model_path='Rempah/rempah_detection.tflite')
+interpreter = tf.lite.Interpreter(model_path='rempah_detection.tflite')
 interpreter.allocate_tensors()
 
 # Get input and output details

@@ -21,4 +21,4 @@ with col2:
 
 st.markdown("")
 st.markdown("")
-st.image("assets/illustrations/banner_rempah.jpg")   # Ganti dengan gambar banner yang relevan
+st.image("assets/illustrations/banner_rempah.webp")   # Ganti dengan gambar banner yang relevan

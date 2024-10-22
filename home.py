@@ -27,6 +27,16 @@ st.title('Deteksi Rempah Realtime')
 # Informasi Tambahan
 st.write("Aplikasi ini akan mendeteksi jenis rempah yang ditangkap oleh kamera secara realtime.")
 
+# Class untuk memproses frame video dengan WebRTC
+class VideoTransformer(VideoTransformerBase):
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+
+        # Melakukan deteksi rempah
+        img = deteksi_rempah(img)
+
+        return img
+
 # Fungsi untuk melakukan deteksi objek (sama seperti sebelumnya)
 @st.cache_data  # Gunakan caching jika memungkinkan
 def deteksi_rempah(frame):
@@ -69,23 +79,4 @@ def deteksi_rempah(frame):
         return frame  # Kembalikan frame asli jika terjadi error
 
 # Menjalankan kamera dan melakukan deteksi
-cap = cv2.VideoCapture(0)  # Gunakan kamera default (0)
-if not cap.isOpened():
-    st.error("Kamera tidak dapat diakses.")
-    st.stop()
-
-frame_placeholder = st.empty()  # Placeholder untuk menampilkan frame
-
-while(True):
-    ret, frame = cap.read()
-    if not ret:
-        st.error("Error saat membaca frame dari kamera.")
-        break
-
-    # Melakukan deteksi rempah
-    frame = deteksi_rempah(frame)
-
-    # Menampilkan frame di Streamlit
-    frame_placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
-
-cap.release()
+webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)

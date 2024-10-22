@@ -67,7 +67,7 @@ def deteksi_rempah(frame):
 if start_camera:
     img_file_buffer = st.camera_input("Ambil gambar rempah")
     
-     if img_file_buffer is not None:
+    if img_file_buffer is not None:
         # Konversi dari file buffer ke OpenCV image
         bytes_data = img_file_buffer.getvalue()
         cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)

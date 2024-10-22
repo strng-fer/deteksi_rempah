@@ -3,14 +3,13 @@ import cv2
 import tensorflow as tf
 import numpy as np
 
-# Load model TensorFlow Lite
+# Load model TensorFlow Lite (di luar loop while)
 interpreter = tf.lite.Interpreter(model_path='rempah_detection.tflite')
 interpreter.allocate_tensors()
 
 # Get input and output details
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
-
 
 # Daftar kategori rempah
 categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah', 'bawang putih', 'biji ketumbar',
@@ -21,8 +20,12 @@ categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah',
 # Judul aplikasi Streamlit
 st.title('Deteksi Rempah Realtime')
 
-# Inisialisasi kamera
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # Gunakan kamera default (0)
+# Informasi Tambahan
+st.write("Aplikasi ini akan mendeteksi jenis rempah yang ditangkap oleh kamera.")
+st.write("Klik tombol 'Aktifkan Kamera' untuk memulai.")
+
+# Tombol untuk mengaktifkan kamera
+start_camera = st.button('Aktifkan Kamera')
 
 # Fungsi untuk melakukan deteksi objek
 def deteksi_rempah(frame):
@@ -60,23 +63,17 @@ def deteksi_rempah(frame):
 
     return frame
 
-# Menampilkan video secara realtime
-frame_placeholder = st.empty()  # Placeholder untuk menampilkan frame
+# Menampilkan video secara realtime jika tombol ditekan
+if start_camera:
+    img_file_buffer = st.camera_input("Ambil gambar rempah")
 
-while(True):
-    # Membaca frame dari kamera
-    ret, frame = cap.read()
+    if img_file_buffer is not None:
+        # Konversi dari file buffer ke OpenCV image
+        bytes_data = img_file_buffer.getvalue()
+        cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
 
-    # Memeriksa apakah frame kosong
-    if not ret:
-        st.error("Gagal mengambil gambar dari kamera.")
-        continue  # Lewati iterasi loop saat ini jika frame kosong
+        # Melakukan deteksi rempah
+        frame = deteksi_rempah(cv2_img)
 
-    # Melakukan deteksi rempah
-    frame = deteksi_rempah(frame)
-
-    # Menampilkan frame di Streamlit
-    frame_placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
-
-# Membersihkan resource setelah selesai
-cap.release()
+        # Menampilkan frame di Streamlit
+        st.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")

@@ -60,3 +60,4 @@ RTC_CONFIGURATION = RTCConfiguration(
 webrtc_streamer(key="rempah_detection", 
                 video_processor_factory=RempahDetection,
                 rtc_configuration=RTC_CONFIGURATION)
+cv2.putText(img, f'{label} {confidence:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)

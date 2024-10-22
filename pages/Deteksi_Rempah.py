@@ -79,4 +79,3 @@ while(cap.isOpened()): # Loop selama kamera terbuka
 
 # Membersihkan resource setelah selesai
 cap.release()
-cv2.destroyAllWindows()

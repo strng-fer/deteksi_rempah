@@ -2,6 +2,8 @@ import streamlit as st
 from PIL import Image
 import numpy as np
 from tensorflow import keras
+from tensorflow.keras.preprocessing import image
+
 
 # Load model Keras
 model = keras.models.load_model('rempah_detection_final.keras')
@@ -19,7 +21,7 @@ st.title('Deteksi Rempah')
 source = st.radio("Sumber Gambar:", ("Upload Gambar", "Ambil Gambar"))
 
 # Fungsi untuk melakukan deteksi objek
-def deteksi_rempah(image):
+def deteksi_rempah(image_path):
     """
     Melakukan deteksi rempah pada gambar.
 
@@ -30,8 +32,8 @@ def deteksi_rempah(image):
         Tuple berisi string label dan confidence score.
     """
     # Preprocess image
-    img = image.resize((110, 110))  # Resize ke 110x110
-    img = img.img_to_array(img) # Normalisasi
+    img = image_path.resize((110, 110))  # Resize ke 110x110
+    img = image.img_to_array(img) # Normalisasi
     img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
 
     # Prediksi

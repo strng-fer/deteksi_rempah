@@ -1,15 +1,10 @@
 import streamlit as st
 import cv2
 import numpy as np
-import tensorflow as tf
+from tensorflow import keras
 
-# Load model TFLite
-interpreter = tf.lite.Interpreter(model_path='rempah_detection.tflite')
-interpreter.allocate_tensors()
-
-# Get input and output details
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
+# Load model Keras
+model = keras.models.load_model('rempah_detection.keras')
 
 # Daftar kategori rempah
 categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah', 'bawang putih', 'biji ketumbar',
@@ -40,19 +35,13 @@ def deteksi_rempah(image):
     img = img.astype('float32')
     img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
 
-    # Set input tensor
-    interpreter.set_tensor(input_details[0]['index'], img)
-
-    # Run inference
-    interpreter.invoke()
-
-    # Get output tensor
-    output_data = interpreter.get_tensor(output_details[0]['index'])
+    # Prediksi
+    predictions = model.predict(img)
 
     # Mendapatkan label dengan probabilitas tertinggi
-    predicted_class = np.argmax(output_data)
+    predicted_class = np.argmax(predictions)
     label = categories[predicted_class]
-    confidence = output_data[0][predicted_class]
+    confidence = predictions[0][predicted_class]
 
     # Menampilkan label pada gambar
     cv2.putText(image, f'{label} {confidence:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)

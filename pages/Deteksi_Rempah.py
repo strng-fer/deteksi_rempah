@@ -1,97 +1,70 @@
 import streamlit as st
-from PIL import Image
 import numpy as np
-from tensorflow import keras
 from tensorflow.keras.preprocessing import image
+from tensorflow.keras.models import load_model
+import matplotlib.pyplot as plt
 
-# Load model Keras
-model = keras.models.load_model('rempah_detection_final.keras')
+# Load the saved model
+model = load_model('/content/rempah_detection.keras')
 
-# Daftar kategori rempah
-categories = ['adas', 'andaliman', 'asam jawa', 'bawang bombai', 'bawang merah', 'bawang putih', 'biji ketumbar',
-              'bukan rempah', 'bunga lawang', 'cengkeh', 'daun jeruk', 'daun kemangi', 'daun ketumbar', 'daun salam',
-              'jahe', 'jinten', 'kapulaga', 'kayu manis', 'kayu secang', 'kemiri', 'kemukus', 'kencur', 'kluwek',
-              'kunyit', 'lada', 'lengkuas', 'pala', 'saffron', 'serai', 'vanili', 'wijen']
+# Define a function to preprocess the uploaded image
+def preprocess_image(img):
+    img = img.resize((110, 110))
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    return img_array
 
-# Judul aplikasi Streamlit
-st.title('Deteksi Rempah')
+# Define your class labels (replace with your actual labels)
+categories = ['adas',
+              'andaliman',
+              'asam jawa',
+              'bawang bombai',
+              'bawang merah',
+              'bawang putih',
+              'biji ketumbar',
+              'bukan rempah',
+              'bunga lawang',
+              'cengkeh',
+              'daun jeruk',
+              'daun kemangi',
+              'daun ketumbar',
+              'daun salam',
+              'jahe',
+              'jinten',
+              'kapulaga',
+              'kayu manis',
+              'kayu secang',
+              'kemiri',
+              'kemukus',
+              'kencur',
+              'kluwek',
+              'kunyit',
+              'lada',
+              'lengkuas',
+              'pala',
+              'saffron',
+              'serai',
+              'vanili',
+              'wijen']
 
-# Pilihan sumber gambar
-source = st.radio("Sumber Gambar:", ("Upload Gambar", "Ambil Gambar"))
+# Streamlit app
+st.title("Rempah Detection App")
 
-# Fungsi untuk melakukan deteksi objek
-def deteksi_rempah(image_path):
-    """
-    Melakukan deteksi rempah pada gambar.
+# Upload image through Streamlit
+uploaded_file = st.file_uploader("Choose an image...", type="jpg")
 
-    Args:
-        image: Gambar yang diunggah atau diambil dari kamera (objek PIL.Image).
+if uploaded_file is not None:
+    # Display the uploaded image
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image', use_column_width=True)
 
-    Returns:
-        Tuple berisi string label dan confidence score.
-    """
-    try:
-        # Preprocess image
-        img = image_path.resize((110, 110))  # Resize ke 110x110
-        img = image.img_to_array(img) 
-        img = img / 255.0  # Normalisasi
-        img = np.expand_dims(img, axis=0)  # Tambahkan dimensi batch
+    # Preprocess the image
+    img_array = preprocess_image(image)
 
-        # Prediksi
-        with st.spinner('Sedang memprediksi...'):
-            predictions = model.predict(img)
+    # Make a prediction
+    prediction = model.predict(img_array)
+    predicted_class_index = np.argmax(prediction)
+    predicted_class = categories[predicted_class_index]
 
-        # Mendapatkan label dengan probabilitas tertinggi
-        predicted_class = np.argmax(predictions)
-        label = categories[predicted_class]
-        confidence = predictions[0][predicted_class]
-
-        return label, confidence
-
-    except Exception as e:
-        st.error(f"Terjadi kesalahan: {e}")
-        return None, None
-
-# Menampilkan hasil prediksi
-if source == "Upload Gambar":
-    # Upload gambar
-    uploaded_file = st.file_uploader("Upload Gambar Rempah", type=["jpg", "jpeg", "png"])
-
-    # Tombol prediksi
-    predict_button = st.button("Prediksi")
-
-    if uploaded_file is not None and predict_button:
-        # Membaca gambar yang diupload
-        image_path = Image.open(uploaded_file)
-
-        # Melakukan deteksi rempah
-        label, confidence = deteksi_rempah(image_path)
-
-        if label is not None:
-            # Menampilkan gambar di Streamlit
-            st.image(image_path, channels="RGB")
-
-            # Menampilkan hasil prediksi
-            st.write(f"Rempah yang terdeteksi: **{label}** ({confidence:.2f})")
-
-            # Menampilkan informasi tambahan (contoh)
-            if label == 'kunyit':
-                st.info("Kunyit adalah rempah-rempah yang sering digunakan sebagai bumbu masakan dan memiliki banyak manfaat kesehatan.")
-
-elif source == "Ambil Gambar":
-    # Ambil gambar dari kamera
-    camera_image = st.camera_input("Ambil Gambar Rempah")
-
-    if camera_image is not None:
-        # Membaca gambar yang diambil dari kamera
-        image_path = Image.open(camera_image)
-
-        # Melakukan deteksi rempah
-        label, confidence = deteksi_rempah(image_path)
-
-        if label is not None:
-            # Menampilkan gambar di Streamlit
-            st.image(image_path, channels="RGB")
-
-            # Menampilkan hasil prediksi
-            st.write(f"Rempah yang terdeteksi: **{label}** ({confidence:.2f})")
+    # Display the results
+    st.write("Predicted class:", predicted_class)

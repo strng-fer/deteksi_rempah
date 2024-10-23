@@ -41,7 +41,12 @@ if model is None:
     st.stop()
 
 # Daftar kategori rempah
-categories = ['Adas', 'Andaliman', 'Asam Jawa', 'Bawang Bombai', 'Bawang Merah', 'Bawang Putih', 'Biji Ketumbar', 'Bukan Rempah', 'Bunga Lawang', 'Cengkeh', 'Daun Jeruk', 'Daun Kemangi', 'Daun Ketumbar', 'Daun Salam', 'Jahe', 'Jinten', 'Kapulaga', 'Kayu Manis', 'Kayu Secang', 'Kemiri', 'Kemukus', 'Kencur', 'Kluwek', 'Kunyit', 'Lada', 'Lengkuas', 'Pala', 'Saffron', 'Serai', 'Vanili', 'Wijen']
+categories = ['Adas', 'Andaliman', 'Asam Jawa', 'Bawang Bombai', 'Bawang Merah', 
+              'Bawang Putih', 'Biji Ketumbar', 'Bukan Rempah', 'Bunga Lawang', 
+              'Cengkeh', 'Daun Jeruk', 'Daun Kemangi', 'Daun Ketumbar', 'Daun Salam', 
+              'Jahe', 'Jinten', 'Kapulaga', 'Kayu Manis', 'Kayu Secang', 'Kemiri', 
+              'Kemukus', 'Kencur', 'Kluwek', 'Kunyit', 'Lada', 'Lengkuas', 'Pala', 
+              'Saffron', 'Serai', 'Vanili', 'Wijen']
 
 # Dictionary untuk mapping indeks ke nama kategori
 int_label = {i: class_name for i, class_name in enumerate(categories)}

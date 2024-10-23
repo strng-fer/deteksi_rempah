@@ -4,4 +4,4 @@ tensorflow==2.17.0
 matplotlib==3.9.2
 streamlit-option-menu==0.4.0
 protobuf==4.25.5
-opencv-python==4.10.0.84
+opencv-python-headless==4.10.0.84

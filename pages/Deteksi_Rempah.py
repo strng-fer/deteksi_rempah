@@ -3,28 +3,31 @@ import tensorflow as tf
 import streamlit as st
 from streamlit_option_menu import option_menu
 import numpy as np
-#logo = Image.open('assets/Logo.png')
+import cv2
+
+# Konfigurasi halaman Streamlit
 st.set_page_config(
-    page_title='Rempah Detection😱', 
-    page_icon='😱', 
+    page_title='Rempah Detection🫚🌿',
+    page_icon='🌿',
     layout='wide'
 )
 
+# Menu navigasi
 selected_tab = option_menu(
     menu_title=None,
-    options=["Upload", "Take a Photo"],
-    icons=["upload", "camera"],
+    options=["Upload", "Realtime Scan", "Capture"],
+    icons=["upload", "camera", "camera-fill"],
     menu_icon="cast",
     default_index=0,
-    key="nav", 
+    key="nav",
     orientation="horizontal"
 )
 
-# Load pre-trained Keras model
-@st.cache_resource()  # Gunakan st.cache_resource() untuk model Keras
+# Load model (dengan caching)
+@st.cache_resource()
 def load_model():
     try:
-        model_path = r'rempah_detection_final.keras'  # Ganti dengan path model .keras Anda
+        model_path = r'rempah_detection_final.keras'
         model = tf.keras.models.load_model(model_path)
         return model
     except IOError:
@@ -35,99 +38,92 @@ model = load_model()
 
 if model is None:
     st.stop()
-    
-    
-categories = ['adas',
-              'andaliman',
-              'asam jawa',
-              'bawang bombai',
-              'bawang merah',
-              'bawang putih',
-              'biji ketumbar',
-              'bukan rempah',
-              'bunga lawang',
-              'cengkeh',
-              'daun jeruk',
-              'daun kemangi',
-              'daun ketumbar',
-              'daun salam',
-              'jahe',
-              'jinten',
-              'kapulaga',
-              'kayu manis',
-              'kayu secang',
-              'kemiri',
-              'kemukus',
-              'kencur',
-              'kluwek',
-              'kunyit',
-              'lada',
-              'lengkuas',
-              'pala',
-              'saffron',
-              'serai',
-              'vanili',
-              'wijen']
 
-# Create int_label dictionary
+# Daftar kategori rempah
+categories = ['Adas', 'Andaliman', 'Asam Jawa', 'Bawang Bombai', 'Bawang Merah', 'Bawang Putih', 'Biji Ketumbar', 'Bukan Rempah', 'Bunga Lawang', 'Cengkeh', 'Daun Jeruk', 'Daun Kemangi', 'Daun Ketumbar', 'Daun Salam', 'Jahe', 'Jinten', 'Kapulaga', 'Kayu Manis', 'Kayu Secang', 'Kemiri', 'Kemukus', 'Kencur', 'Kluwek', 'Kunyit', 'Lada', 'Lengkuas', 'Pala', 'Saffron', 'Serai', 'Vanili', 'Wijen']
+
+# Dictionary untuk mapping indeks ke nama kategori
 int_label = {i: class_name for i, class_name in enumerate(categories)}
 
-
-def preprocess_image(image_path):
+# Fungsi untuk preprocessing gambar
+def preprocess_image(image):
     """Memuat dan memproses gambar."""
-    img = tf.keras.utils.load_img(image_path, target_size=(110, 110))
+    img = cv2.resize(image, (110, 110))
     img_array = tf.keras.utils.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0)   
+    img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
+# Fungsi untuk prediksi gambar yang diupload
 def predict_uploaded_image(uploaded_file, model, transform, categories):
     """Predicts the class of an uploaded image using the provided model."""
-    image = Image.open(uploaded_file).convert('RGB')  
+    image = Image.open(uploaded_file).convert('RGB')
 
-    # Save the image to a temporary file
+    # Simpan gambar ke file sementara
     import tempfile
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
         image.save(temp_file.name)
         image_path = temp_file.name
 
-    # Now use the temporary file path for preprocessing
-    image = transform(image_path)  # Preprocessing
-    img_array = np.array(image)  # Convert to numpy array
+    # Preprocessing
+    image = transform(image_path)
+    img_array = np.array(image)
 
-    # Make a prediction
+    # Prediksi
     prediction = model.predict(img_array)
     predicted_class_index = np.argmax(prediction)
-    predicted_class = categories[predicted_class_index] 
+    predicted_class = categories[predicted_class_index]
     return predicted_class
 
-if selected_tab == "Upload": 
-    # Membuat form untuk upload file
+# Logika untuk setiap tab
+if selected_tab == "Upload":
+    # Form untuk upload file
     uploaded_file = st.file_uploader("Pilih gambar Anda", type=["jpg", "png", "jpeg"])
 
-    # Memprediksi jenis batik
+    # Prediksi jenis rempah
     if uploaded_file is not None:
         image = Image.open(uploaded_file).convert('RGB')
         st.image(image, caption='Gambar yang diunggah', use_column_width=True)
 
         if st.button('Prediksi'):
             with st.spinner('Sedang memprediksi...'):
-                predicted_class = predict_uploaded_image(uploaded_file, model, preprocess_image, int_label) 
+                predicted_class = predict_uploaded_image(uploaded_file, model, preprocess_image, int_label)
 
-            st.write(f'Prediksi: **{predicted_class}**')
+            st.write(f'Rempah: **{predicted_class}**')
 
+elif selected_tab == "Realtime Scan":
+    # Akses kamera
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        st.error("Tidak dapat mengakses kamera.")
+        st.stop()
 
+    # Frame untuk menampilkan video
+    frame_placeholder = st.empty()
 
-elif selected_tab == "Take a Photo":
-    # Membuat form untuk mengambil foto
-    picture = st.camera_input("Ambil foto batik Anda")
+    # Tombol untuk mengambil gambar
+    stop = st.button("Stop")
 
-    # Memprediksi jenis batik
-    if picture is not None:
-        image = Image.open(picture).convert('RGB')
-        st.image(image, caption='Gambar yang diambil', use_column_width=True)
+    # Loop untuk menampilkan video dan mengambil gambar
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            st.error("Error saat membaca frame dari kamera.")
+            break
 
-        if st.button('Prediksi Foto'):
-            with st.spinner('Sedang memprediksi...'):
-                predicted_class = predict_uploaded_image(picture, model, preprocess_image, int_label)
+        # Prediksi gambar yang diambil
+        with st.spinner('Sedang memprediksi...'):
+            preprocessed_image = preprocess_image(frame)
+            prediction = model.predict(preprocessed_image)
+            predicted_class_index = np.argmax(prediction)
+            predicted_class = int_label[predicted_class_index]
 
-            st.write(f'Prediksi: **{predicted_class}**')
+            # Menambahkan teks prediksi ke frame
+            cv2.putText(frame, f'Rempah: {predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3) # Outline putih
+            cv2.putText(frame, f'Rempah: {predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 2) # Teks hitam di atasnya        # Menampilkan frame di Streamlit
+        frame_placeholder.image(frame, channels="BGR")
+
+        if stop:
+            break
+
+    # Membersihkan resource kamera
+    cap.release()

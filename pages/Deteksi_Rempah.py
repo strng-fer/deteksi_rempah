@@ -128,6 +128,6 @@ elif selected_tab == "Take a Photo":
 
         if st.button('Prediksi Foto'):
             with st.spinner('Sedang memprediksi...'):
-                predicted_class = predict_uploaded_image(picture, model, val_transform, int_label)
+                predicted_class = predict_uploaded_image(picture, model, preprocess_image, int_label)
 
             st.write(f'Prediksi: **{predicted_class}**')

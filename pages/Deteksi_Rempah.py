@@ -114,3 +114,20 @@ if selected_tab == "Upload":
                 predicted_class = predict_uploaded_image(uploaded_file, model, preprocess_image, int_label) 
 
             st.write(f'Prediksi: **{predicted_class}**')
+
+
+
+elif selected_tab == "Take a Photo":
+    # Membuat form untuk mengambil foto
+    picture = st.camera_input("Ambil foto batik Anda")
+
+    # Memprediksi jenis batik
+    if picture is not None:
+        image = Image.open(picture).convert('RGB')
+        st.image(image, caption='Gambar yang diambil', use_column_width=True)
+
+        if st.button('Prediksi Foto'):
+            with st.spinner('Sedang memprediksi...'):
+                predicted_class = predict_uploaded_image(picture, model, val_transform, int_label)
+
+            st.write(f'Prediksi: **{predicted_class}**')

@@ -4,6 +4,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import numpy as np
 import cv2
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 
 # Konfigurasi halaman Streamlit
 st.set_page_config(
@@ -74,6 +75,27 @@ def predict_uploaded_image(uploaded_file, model, transform, categories):
     predicted_class = categories[predicted_class_index]
     return predicted_class
 
+# Define a video transformer class
+class VideoProcessor(VideoProcessorBase):  # Use VideoProcessorBase
+    def __init__(self):
+        self.predicted_class = "None"
+
+    def recv(self, frame):  # Use recv instead of transform
+        image = frame.to_ndarray(format="bgr24")  # Get image as NumPy array
+
+        # Prediksi gambar 
+        with st.spinner('Sedang memprediksi...'):
+            preprocessed_image = preprocess_image(image)
+            prediction = model.predict(preprocessed_image)
+            predicted_class_index = np.argmax(prediction)
+            self.predicted_class = int_label[predicted_class_index]
+
+        # Menambahkan teks prediksi ke frame
+        cv2.putText(image, f'Rempah: {self.predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3)
+        cv2.putText(image, f'Rempah: {self.predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 2)
+
+        return image
+    
 # Logika untuk setiap tab
 if selected_tab == "Upload":
     # Form untuk upload file
@@ -90,50 +112,17 @@ if selected_tab == "Upload":
 
             st.write(f'Rempah: **{predicted_class}**')
 
+
 elif selected_tab == "Realtime Scan":
     st.write("Pastikan browser telah memberikan izin akses kamera.")
 
-    # Inisialisasi predicted_class 
-    predicted_class = "None" 
+    # Inisialisasi webrtc_streamer
+    webrtc_streamer(
+        key="realtime_scan", 
+        video_processor_factory=VideoProcessor,  # Use video_processor_factory
+        media_stream_constraints={"video": True, "audio": False}
+    )
 
-    # Frame untuk menampilkan video
-    frame_placeholder = st.empty()
-
-    # Tombol untuk menghentikan kamera
-    stop = st.button("Stop")
-    
-    # Inisialisasi key untuk st.camera_input di luar loop
-    camera_key = "realtime_camera"
-    
-   # Loop untuk menampilkan video dan mengambil gambar
-    while not stop:  # Loop selama tombol stop tidak ditekan
-        picture = st.camera_input("Ambil gambar rempah", key=camera_key) 
-        camera_key += str(np.random.randint(1000))
-        
-        if picture:
-            # Konversi gambar dari st.camera_input ke OpenCV
-            image = Image.open(picture).convert('RGB')
-            frame = np.array(image)
-            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Konversi dari RGB ke BGR
-
-            # Prediksi gambar yang diambil
-            with st.spinner('Sedang memprediksi...'):
-                preprocessed_image = preprocess_image(frame)
-                prediction = model.predict(preprocessed_image)
-                predicted_class_index = np.argmax(prediction)
-                predicted_class = int_label[predicted_class_index]
-
-            # Menambahkan teks prediksi ke frame
-            cv2.putText(frame, f'Rempah: {predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3)
-            cv2.putText(frame, f'Rempah: {predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 2)
-
-            # Menampilkan frame di Streamlit
-            frame_placeholder.image(frame, channels="BGR")
-
-        if stop:  # Hentikan loop jika tombol stop ditekan
-            break
-    
-    
 # Fitur Ambil Gambar
 elif selected_tab == "Capture":
     

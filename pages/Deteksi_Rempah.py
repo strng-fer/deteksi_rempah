@@ -7,8 +7,8 @@ import cv2
 
 # Konfigurasi halaman Streamlit
 st.set_page_config(
-    page_title='Rempah Detection🫚🌿',
-    page_icon='🌿',
+    page_title='Rempah Detection😱',
+    page_icon='😱',
     layout='wide'
 )
 
@@ -91,39 +91,68 @@ if selected_tab == "Upload":
             st.write(f'Rempah: **{predicted_class}**')
 
 elif selected_tab == "Realtime Scan":
-    # Akses kamera
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        st.error("Tidak dapat mengakses kamera.")
-        st.stop()
+    st.write("Pastikan browser telah memberikan izin akses kamera.")
+
+    # Inisialisasi predicted_class 
+    predicted_class = "None" 
 
     # Frame untuk menampilkan video
     frame_placeholder = st.empty()
 
-    # Tombol untuk mengambil gambar
+    # Tombol untuk menghentikan kamera
     stop = st.button("Stop")
+    
+    # Inisialisasi key untuk st.camera_input di luar loop
+    camera_key = "realtime_camera"
+    
+   # Loop untuk menampilkan video dan mengambil gambar
+    while not stop:  # Loop selama tombol stop tidak ditekan
+        picture = st.camera_input("Ambil gambar rempah", key=camera_key) 
+        camera_key += str(np.random.randint(1000))
+        
+        if picture:
+            # Konversi gambar dari st.camera_input ke OpenCV
+            image = Image.open(picture).convert('RGB')
+            frame = np.array(image)
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Konversi dari RGB ke BGR
 
-    # Loop untuk menampilkan video dan mengambil gambar
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            st.error("Error saat membaca frame dari kamera.")
-            break
-
-        # Prediksi gambar yang diambil
-        with st.spinner('Sedang memprediksi...'):
-            preprocessed_image = preprocess_image(frame)
-            prediction = model.predict(preprocessed_image)
-            predicted_class_index = np.argmax(prediction)
-            predicted_class = int_label[predicted_class_index]
+            # Prediksi gambar yang diambil
+            with st.spinner('Sedang memprediksi...'):
+                preprocessed_image = preprocess_image(frame)
+                prediction = model.predict(preprocessed_image)
+                predicted_class_index = np.argmax(prediction)
+                predicted_class = int_label[predicted_class_index]
 
             # Menambahkan teks prediksi ke frame
-            cv2.putText(frame, f'Rempah: {predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3) # Outline putih
-            cv2.putText(frame, f'Rempah: {predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 2) # Teks hitam di atasnya        # Menampilkan frame di Streamlit
-        frame_placeholder.image(frame, channels="BGR")
+            cv2.putText(frame, f'Rempah: {predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3)
+            cv2.putText(frame, f'Rempah: {predicted_class}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 2)
 
-        if stop:
+            # Menampilkan frame di Streamlit
+            frame_placeholder.image(frame, channels="BGR")
+
+        if stop:  # Hentikan loop jika tombol stop ditekan
             break
+    
+    
+# Fitur Ambil Gambar
+elif selected_tab == "Capture":
+    
+    # Inisialisasi key untuk st.camera_input di luar loop
+    camera_key = "caputre_camera_key" 
+    
+    st.write("Pastikan browser telah memberikan izin akses kamera.")
+    picture = st.camera_input("Ambil gambar rempah", key= "Capture")
+    
+    if picture:
+        st.image(picture, caption='Gambar yang diambil', use_column_width=True)
+        if st.button('Prediksi'):
+            with st.spinner('Sedang memprediksi...'):
+                # Konversi gambar dari st.camera_input ke format yang sesuai untuk model
+                image = Image.open(picture).convert('RGB') 
+                img_array = preprocess_image(np.array(image))
 
-    # Membersihkan resource kamera
-    cap.release()
+                prediction = model.predict(img_array)
+                predicted_class_index = np.argmax(prediction)
+                predicted_class = int_label[predicted_class_index]
+
+            st.write(f'Rempah: **{predicted_class}**')
